@@ -149,7 +149,9 @@ function Library:CreateWindow(options)
 	logo.Font = Enum.Font.GothamBold
 	logo.TextSize = 22
 	logo.TextColor3 = theme("Gold_Primary")
-	logo.Text = "◆ AURUM UI ◆"
+	logo.Text = "AURUM UI"
+	logo.TextStrokeTransparency = 0.65
+	logo.TextStrokeColor3 = theme("Gold_Light")
 	logo.Parent = loadContainer
 	track(logo)
 
@@ -189,6 +191,10 @@ function Library:CreateWindow(options)
 	barFill.Parent = barBg
 	track(barFill)
 	UIManager.ApplyCorner(barFill, 4)
+	local barFillGrad = Instance.new("UIGradient")
+	barFillGrad.Color = ColorSequence.new(theme("Gold_Dim"), theme("Gold_Light"))
+	barFillGrad.Rotation = 0
+	barFillGrad.Parent = barFill
 
 	local pctLbl = Instance.new("TextLabel")
 	pctLbl.BackgroundTransparency = 1
@@ -256,6 +262,33 @@ function Library:CreateWindow(options)
 	track(main)
 	UIManager.ApplyCorner(main, 10)
 
+	local ringGlow = Instance.new("Frame")
+	ringGlow.Name = "RingGlow"
+	ringGlow.BackgroundTransparency = 1
+	ringGlow.Size = UDim2.new(1, 24, 1, 24)
+	ringGlow.Position = UDim2.new(0.5, 0, 0.5, 0)
+	ringGlow.AnchorPoint = Vector2.new(0.5, 0.5)
+	ringGlow.ZIndex = 0
+	ringGlow.Parent = main
+	track(ringGlow)
+	UIManager.ApplyCorner(ringGlow, 14)
+	local ringStroke = Instance.new("UIStroke")
+	ringStroke.Color = theme("Gold_Primary")
+	ringStroke.Thickness = 2
+	ringStroke.Transparency = 0.55
+	ringStroke.Parent = ringGlow
+	local ringStroke2 = Instance.new("UIStroke")
+	ringStroke2.Color = theme("Gold_Light")
+	ringStroke2.Thickness = 1
+	ringStroke2.Transparency = 0.75
+	ringStroke2.Parent = ringGlow
+
+	local mainStroke = Instance.new("UIStroke")
+	mainStroke.Color = theme("Stroke_Gold")
+	mainStroke.Thickness = 1
+	mainStroke.Transparency = 0.35
+	mainStroke.Parent = main
+
 	local shadow = Instance.new("Frame")
 	shadow.BackgroundColor3 = Color3.new(0, 0, 0)
 	shadow.BackgroundTransparency = 0.65
@@ -318,9 +351,29 @@ function Library:CreateWindow(options)
 	topStroke.Thickness = 1
 	topStroke.Parent = topBar
 
+	local topBarShine = Instance.new("Frame")
+	topBarShine.Size = UDim2.new(1, 0, 0, 1)
+	topBarShine.Position = UDim2.new(0, 0, 0, 0)
+	topBarShine.BackgroundColor3 = theme("Gold_Light")
+	topBarShine.BackgroundTransparency = 0.65
+	topBarShine.BorderSizePixel = 0
+	topBarShine.ZIndex = 5
+	topBarShine.Parent = topBar
+	track(topBarShine)
+
+	local topBarAccent = Instance.new("Frame")
+	topBarAccent.Size = UDim2.new(1, 0, 0, 1)
+	topBarAccent.Position = UDim2.new(0, 0, 1, -1)
+	topBarAccent.BackgroundColor3 = theme("Gold_Primary")
+	topBarAccent.BackgroundTransparency = 0.55
+	topBarAccent.BorderSizePixel = 0
+	topBarAccent.ZIndex = 5
+	topBarAccent.Parent = topBar
+	track(topBarAccent)
+
 	local titleRow = Instance.new("Frame")
 	titleRow.BackgroundTransparency = 1
-	titleRow.Size = UDim2.new(1, -200, 1, 0)
+	titleRow.Size = UDim2.new(1, -300, 1, 0)
 	titleRow.Position = UDim2.new(0, 10, 0, 0)
 	titleRow.Parent = topBar
 	track(titleRow)
@@ -331,6 +384,8 @@ function Library:CreateWindow(options)
 	titleLbl.Font = Enum.Font.GothamBold
 	titleLbl.TextSize = 15
 	titleLbl.TextColor3 = theme("White_Primary")
+	titleLbl.TextStrokeTransparency = 0.85
+	titleLbl.TextStrokeColor3 = theme("Gold_Dim")
 	titleLbl.TextXAlignment = Enum.TextXAlignment.Left
 	titleLbl.Text = windowName
 	titleLbl.Parent = titleRow
@@ -338,32 +393,53 @@ function Library:CreateWindow(options)
 
 	local controls = Instance.new("Frame")
 	controls.BackgroundTransparency = 1
-	controls.Size = UDim2.new(0, 180, 1, 0)
-	controls.Position = UDim2.new(1, -185, 0, 0)
+	controls.Size = UDim2.new(0, 0, 1, 0)
+	controls.AutomaticSize = Enum.AutomaticSize.X
+	controls.AnchorPoint = Vector2.new(1, 0)
+	controls.Position = UDim2.new(1, -8, 0, 0)
 	controls.Parent = topBar
 	track(controls)
+	local ctrlLayout = Instance.new("UIListLayout")
+	ctrlLayout.FillDirection = Enum.FillDirection.Horizontal
+	ctrlLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+	ctrlLayout.Padding = UDim.new(0, 6)
+	ctrlLayout.Parent = controls
 
-	local function makeControl(text, order)
+	local function makeControl(text)
 		local b = Instance.new("TextButton")
 		b.Text = text
-		b.Size = UDim2.new(0, 28, 0, 24)
-		b.Position = UDim2.new(0, (order - 1) * 32, 0.5, -12)
+		b.Size = UDim2.new(0, 0, 0, 24)
+		b.AutomaticSize = Enum.AutomaticSize.X
 		b.BackgroundColor3 = theme("Black_Elevated")
 		b.TextColor3 = theme("White_Secondary")
 		b.Font = Enum.Font.GothamBold
-		b.TextSize = 14
+		b.TextSize = 12
 		b.AutoButtonColor = false
 		b.Parent = controls
 		track(b)
 		UIManager.ApplyCorner(b, 4)
+		UIManager.ApplyPadding(b, 8)
+		local bs = Instance.new("UIStroke")
+		bs.Color = theme("Stroke_Dark")
+		bs.Thickness = 1
+		bs.Transparency = 0.4
+		bs.Parent = b
+		b.MouseEnter:Connect(function()
+			Tween(b, { BackgroundColor3 = theme("Black_Surface") }, 0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+			Tween(bs, { Color = theme("Gold_Primary"), Transparency = 0.5 }, 0.12)
+		end)
+		b.MouseLeave:Connect(function()
+			Tween(b, { BackgroundColor3 = theme("Black_Elevated") }, 0.12)
+			Tween(bs, { Color = theme("Stroke_Dark"), Transparency = 0.4 }, 0.12)
+		end)
 		return b
 	end
 
-	local btnSearch = makeControl("🔍", 1)
-	local btnKeys = makeControl("⌨", 2)
-	local btnMin = makeControl("─", 3)
-	local btnCompact = makeControl("□", 4)
-	local btnClose = makeControl("✕", 5)
+	local btnSearch = makeControl("Find")
+	local btnKeys = makeControl("Keys")
+	local btnMin = makeControl("Min")
+	local btnCompact = makeControl("Cmp")
+	local btnClose = makeControl("Close")
 
 	local tabBar = Instance.new("Frame")
 	tabBar.Name = "TabBar"
@@ -374,6 +450,15 @@ function Library:CreateWindow(options)
 	tabBar.ZIndex = 4
 	tabBar.Parent = main
 	track(tabBar)
+	local tabBarGlow = Instance.new("Frame")
+	tabBarGlow.Size = UDim2.new(1, 0, 0, 1)
+	tabBarGlow.Position = UDim2.new(0, 0, 1, -1)
+	tabBarGlow.BackgroundColor3 = theme("Stroke_Dark")
+	tabBarGlow.BackgroundTransparency = 0.3
+	tabBarGlow.BorderSizePixel = 0
+	tabBarGlow.ZIndex = 4
+	tabBarGlow.Parent = tabBar
+	track(tabBarGlow)
 
 	local tabScroll = Instance.new("ScrollingFrame")
 	tabScroll.Name = "TabScroll"
@@ -402,6 +487,11 @@ function Library:CreateWindow(options)
 	tabIndicator.ZIndex = 5
 	tabIndicator.Parent = tabScroll
 	track(tabIndicator)
+	local tabIndGlow = Instance.new("UIStroke")
+	tabIndGlow.Color = theme("Gold_Light")
+	tabIndGlow.Thickness = 3
+	tabIndGlow.Transparency = 0.65
+	tabIndGlow.Parent = tabIndicator
 
 	local contentHost = Instance.new("Frame")
 	contentHost.Name = "Content"
@@ -908,7 +998,8 @@ function Library:CreateWindow(options)
 			arrow.Size = UDim2.new(0, 20, 1, 0)
 			arrow.Position = UDim2.new(1, -24, 0, 0)
 			arrow.BackgroundTransparency = 1
-			arrow.Text = "▼"
+			arrow.Text = "v"
+			arrow.Font = Enum.Font.GothamBold
 			arrow.TextColor3 = theme("White_Secondary")
 			arrow.Parent = header
 			track(arrow)
@@ -932,17 +1023,17 @@ function Library:CreateWindow(options)
 			local collapsed = secOptions.Closed == true
 			if collapsed then
 				body.Visible = false
-				arrow.Rotation = 180
+				arrow.Text = ">"
 			end
 
 			header.MouseButton1Click:Connect(function()
 				collapsed = not collapsed
 				if collapsed then
 					body.Visible = false
-					Tween(arrow, { Rotation = 180 }, 0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+					arrow.Text = ">"
 				else
 					body.Visible = true
-					Tween(arrow, { Rotation = 0 }, 0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+					arrow.Text = "v"
 				end
 			end)
 
@@ -1289,7 +1380,7 @@ function Library:CreateWindow(options)
 						b.Font = Enum.Font.Gotham
 						b.TextSize = 13
 						local isSel = (multi and indexOf(sel, opt) ~= nil) or (not multi and sel == opt)
-						b.Text = (isSel and "◆ " or "   ") .. opt
+						b.Text = (isSel and "[*] " or "[ ] ") .. opt
 						b.AutoButtonColor = false
 						b.Parent = list
 						b.MouseEnter:Connect(function()
