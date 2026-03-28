@@ -373,6 +373,13 @@ local NOTIF_COLORS = {
 	error = Color3.fromRGB(230, 80, 80),
 }
 
+local NOTIF_LABELS = {
+	info = "INFO",
+	success = "OK",
+	warning = "WARN",
+	error = "ERR",
+}
+
 local function getNotifParent()
 	if NotificationGui and NotificationGui.Parent then
 		return NotificationGui
@@ -380,8 +387,9 @@ local function getNotifParent()
 	local sg = Instance.new("ScreenGui")
 	sg.Name = "AurumUINotifications"
 	sg.ResetOnSpawn = false
+	sg.IgnoreGuiInset = true
 	sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-	sg.DisplayOrder = 10000
+	sg.DisplayOrder = 20000
 	if gethui then
 		sg.Parent = gethui()
 	elseif syn and syn.protect_gui then
@@ -401,11 +409,11 @@ local function getNotifParent()
 	layout.FillDirection = Enum.FillDirection.Vertical
 	layout.HorizontalAlignment = Enum.HorizontalAlignment.Right
 	layout.VerticalAlignment = Enum.VerticalAlignment.Bottom
-	layout.Padding = UDim.new(0, 8)
+	layout.Padding = UDim.new(0, 10)
 	layout.Parent = holder
 	local pad = Instance.new("UIPadding")
-	pad.PaddingBottom = UDim.new(0, 16)
-	pad.PaddingRight = UDim.new(0, 16)
+	pad.PaddingBottom = UDim.new(0, 20)
+	pad.PaddingRight = UDim.new(0, 20)
 	pad.Parent = holder
 	return sg
 end
@@ -414,9 +422,8 @@ function UIManager.Notify(options)
 	options = options or {}
 	local title = options.Title or "Notice"
 	local content = options.Content or ""
-	local duration = options.Duration or 5
+	local duration = math.max(0.5, options.Duration or 5)
 	local ntype = options.Type or "info"
-	local actions = options.Actions
 
 	getNotifParent()
 
@@ -430,32 +437,75 @@ function UIManager.Notify(options)
 	end
 
 	local borderColor = NOTIF_COLORS[ntype] or NOTIF_COLORS.info
+	local typeLabel = NOTIF_LABELS[ntype] or NOTIF_LABELS.info
+
+	local holder = NotificationGui:FindFirstChild("Holder")
+	local outer = Instance.new("Frame")
+	outer.Name = "NotifOuter"
+	outer.BackgroundTransparency = 1
+	outer.Size = UDim2.new(0, 320, 0, 0)
+	outer.AutomaticSize = Enum.AutomaticSize.Y
+	outer.ClipsDescendants = false
+	outer.Parent = holder
 
 	local root = Instance.new("Frame")
 	root.Name = "Notification"
 	root.BackgroundColor3 = UIManager.Theme.Get("Black_Mid")
 	root.BorderSizePixel = 0
-	root.Size = UDim2.new(0, 320, 0, 0)
+	root.Size = UDim2.new(1, 0, 0, 0)
 	root.AutomaticSize = Enum.AutomaticSize.Y
-	root.ZIndex = 20
+	root.ZIndex = 24
+	root.Position = UDim2.new(0, 72, 0, 0)
+	root.Parent = outer
+
+	local strokeGlow = Instance.new("UIStroke")
+	strokeGlow.Color = borderColor
+	strokeGlow.Thickness = 2
+	strokeGlow.Transparency = 0.35
+	strokeGlow.Parent = root
 
 	local stroke = Instance.new("UIStroke")
-	stroke.Color = borderColor
+	stroke.Color = UIManager.Theme.Get("Stroke_Dark")
 	stroke.Thickness = 1
 	stroke.Parent = root
 
 	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 6)
+	corner.CornerRadius = UDim.new(0, 8)
 	corner.Parent = root
 
 	local pad = Instance.new("UIPadding")
-	pad.PaddingTop = UDim.new(0, 10)
-	pad.PaddingBottom = UDim.new(0, 14)
-	pad.PaddingLeft = UDim.new(0, 12)
-	pad.PaddingRight = UDim.new(0, 12)
+	pad.PaddingTop = UDim.new(0, 12)
+	pad.PaddingBottom = UDim.new(0, 16)
+	pad.PaddingLeft = UDim.new(0, 14)
+	pad.PaddingRight = UDim.new(0, 14)
 	pad.Parent = root
 
+	local list = Instance.new("UIListLayout")
+	list.SortOrder = Enum.SortOrder.LayoutOrder
+	list.Padding = UDim.new(0, 8)
+	list.Parent = root
+
+	local badge = Instance.new("TextLabel")
+	badge.LayoutOrder = 1
+	badge.BackgroundColor3 = borderColor
+	badge.BackgroundTransparency = 0.78
+	badge.Size = UDim2.new(0, 0, 0, 20)
+	badge.AutomaticSize = Enum.AutomaticSize.X
+	badge.Font = Enum.Font.GothamBold
+	badge.TextSize = 11
+	badge.TextColor3 = borderColor
+	badge.Text = typeLabel
+	badge.Parent = root
+	local bc = Instance.new("UICorner")
+	bc.CornerRadius = UDim.new(0, 4)
+	bc.Parent = badge
+	local bp = Instance.new("UIPadding")
+	bp.PaddingLeft = UDim.new(0, 8)
+	bp.PaddingRight = UDim.new(0, 8)
+	bp.Parent = badge
+
 	local titleLbl = Instance.new("TextLabel")
+	titleLbl.LayoutOrder = 2
 	titleLbl.BackgroundTransparency = 1
 	titleLbl.Font = Enum.Font.GothamBold
 	titleLbl.TextSize = 15
@@ -468,6 +518,7 @@ function UIManager.Notify(options)
 	titleLbl.Parent = root
 
 	local body = Instance.new("TextLabel")
+	body.LayoutOrder = 3
 	body.BackgroundTransparency = 1
 	body.Font = Enum.Font.Gotham
 	body.TextSize = 13
@@ -480,38 +531,36 @@ function UIManager.Notify(options)
 	body.Parent = root
 
 	local progress = Instance.new("Frame")
+	progress.LayoutOrder = 4
 	progress.Name = "Progress"
-	progress.BackgroundColor3 = borderColor
+	progress.BackgroundColor3 = UIManager.Theme.Get("Black_Surface")
 	progress.BorderSizePixel = 0
-	progress.Size = UDim2.new(1, 0, 0, 3)
-	progress.Position = UDim2.new(0, 0, 1, -3)
-	progress.AnchorPoint = Vector2.new(0, 1)
+	progress.Size = UDim2.new(1, 0, 0, 4)
+	progress.ZIndex = 25
 	progress.Parent = root
+	local pc = Instance.new("UICorner")
+	pc.CornerRadius = UDim.new(0, 2)
+	pc.Parent = progress
 
 	local progressFill = Instance.new("Frame")
 	progressFill.BackgroundColor3 = borderColor
 	progressFill.BorderSizePixel = 0
 	progressFill.Size = UDim2.new(1, 0, 1, 0)
 	progressFill.Parent = progress
+	local pfc = Instance.new("UICorner")
+	pfc.CornerRadius = UDim.new(0, 2)
+	pfc.Parent = progressFill
+	local pfGrad = Instance.new("UIGradient")
+	pfGrad.Color = ColorSequence.new(borderColor, UIManager.Theme.Get("Gold_Light"))
+	pfGrad.Rotation = 0
+	pfGrad.Parent = progressFill
 
-	local holder = NotificationGui:FindFirstChild("Holder")
-	local outer = Instance.new("Frame")
-	outer.BackgroundTransparency = 1
-	outer.Size = UDim2.new(0, 320, 0, 0)
-	outer.AutomaticSize = Enum.AutomaticSize.Y
-	outer.Parent = holder
-
-	root.BackgroundTransparency = 0
-	root.Size = UDim2.new(1, 0, 0, 0)
-	root.Position = UDim2.new(0, 80, 0, 0)
-	root.Parent = outer
-
-	UIManager.Tween(root, { Position = UDim2.new(0, 0, 0, 0) }, 0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+	UIManager.Tween(root, { Position = UDim2.new(0, 0, 0, 0) }, 0.38, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 
 	local elapsed = 0
 	local alive = true
 	local conn
-	conn = RunService.Heartbeat:Connect(function(dt)
+	conn = RunService.RenderStepped:Connect(function(dt)
 		if not alive or not progressFill.Parent then
 			if conn then
 				conn:Disconnect()
@@ -532,7 +581,7 @@ function UIManager.Notify(options)
 		if conn then
 			conn:Disconnect()
 		end
-		UIManager.Tween(root, { Position = UDim2.new(0, 0, 0, -40), BackgroundTransparency = 1 }, fast and 0.12 or 0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.In, function()
+		UIManager.Tween(root, { Position = UDim2.new(0, 0, 0, -48), BackgroundTransparency = 1 }, fast and 0.12 or 0.24, Enum.EasingStyle.Quad, Enum.EasingDirection.In, function()
 			if outer and outer.Parent then
 				outer:Destroy()
 			else
@@ -557,15 +606,18 @@ function UIManager.Notify(options)
 	return entry
 end
 
--- Draggable state
+-- Draggable: global release (not handle.InputEnded) so dragging still works when cursor leaves the top bar.
+-- InputChanged is only subscribed while dragging so it cannot starve other UI (e.g. notifications).
 function UIManager.MakeDraggable(frame, handle, options)
 	options = options or {}
 	local snapBack = options.SnapBack ~= false
 	local saveKey = options.SaveKey
-	local gui = frame:FindFirstAncestorOfClass("ScreenGui")
 
 	local dragging = false
-	local dragStart, startPos
+	local dragStart = Vector3.new()
+	local startPos = UDim2.new()
+	local moveConn = nil
+	local endConn = nil
 
 	local function clampPos(pos)
 		local cam = workspace.CurrentCamera
@@ -576,51 +628,82 @@ function UIManager.MakeDraggable(frame, handle, options)
 		return UDim2.new(0, math.clamp(pos.X.Offset, 0, maxX), 0, math.clamp(pos.Y.Offset, 0, maxY))
 	end
 
+	local function stopDragConnections()
+		if moveConn then
+			moveConn:Disconnect()
+			moveConn = nil
+		end
+		if endConn then
+			endConn:Disconnect()
+			endConn = nil
+		end
+	end
+
+	local function finishDrag()
+		if not dragging then
+			return
+		end
+		dragging = false
+		stopDragConnections()
+		if snapBack then
+			local cam = workspace.CurrentCamera
+			local vs = cam and cam.ViewportSize or Vector2.new(1920, 1080)
+			local pos = frame.AbsolutePosition
+			local abs = frame.AbsoluteSize
+			local nx, ny = pos.X, pos.Y
+			local margin = 8
+			if nx < margin then
+				nx = margin
+			elseif nx + abs.X > vs.X - margin then
+				nx = vs.X - abs.X - margin
+			end
+			if ny < margin then
+				ny = margin
+			elseif ny + abs.Y > vs.Y - margin then
+				ny = vs.Y - abs.Y - margin
+			end
+			UIManager.Tween(frame, { Position = UDim2.new(0, nx, 0, ny) }, 0.28, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+		end
+		if saveKey and writefile then
+			local data = { X = frame.Position.X.Offset, Y = frame.Position.Y.Offset }
+			pcall(function()
+				writefile(saveKey .. "_pos.json", HttpService:JSONEncode(data))
+			end)
+		end
+	end
+
 	handle.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			dragging = true
-			dragStart = input.Position
-			startPos = frame.Position
+		if input.UserInputType ~= Enum.UserInputType.MouseButton1 and input.UserInputType ~= Enum.UserInputType.Touch then
+			return
 		end
-	end)
-
-	handle.InputEnded:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			dragging = false
-			if snapBack then
-				local cam = workspace.CurrentCamera
-				local vs = cam and cam.ViewportSize or Vector2.new(1920, 1080)
-				local pos = frame.AbsolutePosition
-				local abs = frame.AbsoluteSize
-				local nx, ny = pos.X, pos.Y
-				local margin = 8
-				if nx < margin then
-					nx = margin
-				elseif nx + abs.X > vs.X - margin then
-					nx = vs.X - abs.X - margin
-				end
-				if ny < margin then
-					ny = margin
-				elseif ny + abs.Y > vs.Y - margin then
-					ny = vs.Y - abs.Y - margin
-				end
-				UIManager.Tween(frame, { Position = UDim2.new(0, nx, 0, ny) }, 0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-			end
-			if saveKey and writefile then
-				local data = { X = frame.Position.X.Offset, Y = frame.Position.Y.Offset }
-				pcall(function()
-					writefile(saveKey .. "_pos.json", HttpService:JSONEncode(data))
-				end)
-			end
+		if dragging then
+			finishDrag()
 		end
-	end)
-
-	UserInputService.InputChanged:Connect(function(input)
-		if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-			local delta = input.Position - dragStart
-			local newPos = startPos + UDim2.new(0, delta.X, 0, delta.Y)
+		stopDragConnections()
+		dragging = true
+		dragStart = input.Position
+		startPos = frame.Position
+		moveConn = UserInputService.InputChanged:Connect(function(inp)
+			if not dragging then
+				return
+			end
+			if inp.UserInputType ~= Enum.UserInputType.MouseMovement and inp.UserInputType ~= Enum.UserInputType.Touch then
+				return
+			end
+			local delta = inp.Position - dragStart
+			local newPos = UDim2.new(
+				startPos.X.Scale,
+				startPos.X.Offset + delta.X,
+				startPos.Y.Scale,
+				startPos.Y.Offset + delta.Y
+			)
 			frame.Position = clampPos(newPos)
-		end
+		end)
+		endConn = UserInputService.InputEnded:Connect(function(inp)
+			if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then
+				finishDrag()
+			end
+		end)
 	end)
 end
 
@@ -741,7 +824,8 @@ function UIManager.Truncate(str, maxLen)
 	if #str <= maxLen then
 		return str
 	end
-	return str:sub(1, maxLen - 1) .. "…"
+	local cut = math.max(0, maxLen - 3)
+	return str:sub(1, cut) .. "..."
 end
 
 function UIManager.FormatNumber(n)
